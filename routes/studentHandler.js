@@ -2,7 +2,6 @@
  * This file is for action in course service, including CRUD
  */
 
-var qs = require('querystring');
 var request = require('request');
 var ipTable = require('./iptable');
 
@@ -20,24 +19,19 @@ exports.createStudent = function(req, res) {
     });
 
     req.on('end', function () {
-        var post = qs.parse(body);
-
         // send http request to student service
         var url = 'http://'+ipTable.studentServiceIp+':'+ipTable.studentServicePort+'/student/'+req.params.uni;
-        var formData = qs.stringify({
-            name: post['name'],
-            coursesEnrolled: post['coursesEnrolled']
-        });
 
         request({
             headers: {
                 'Content-Type': 'application/x-message_router-form-urlencoded'
             },
             uri: url,
-            body: formData,
+            body: body,
             method: 'PUT'
         }, function (err, response, body) {
             // send ack
+            res.setHeader('Content-Type', 'application/json');
             res.send(body);
         });
     });
@@ -56,6 +50,8 @@ exports.deleteStudent = function(req, res) {
         method: 'DELETE'
     }, function (err, response, body) {
         sendToCourseService();
+
+        res.setHeader('Content-Type', 'application/json');
         res.send(body);
     });
 
@@ -88,6 +84,8 @@ exports.readStudent = function(req, res) {
         method: 'GET'
     }, function (err, response, body) {
         // send ack
+
+        res.setHeader('Content-Type', 'application/json');
         res.send(body);
     });
 };
@@ -106,23 +104,20 @@ exports.updateStudent = function(req, res) {
     });
 
     req.on('end', function () {
-        var post = qs.parse(body);
-
         // send http request to student service
         var url = 'http://'+ipTable.studentServiceIp+':'+ipTable.studentServicePort+'/student/'+req.params.uni;
-        var formData = qs.stringify({
-            name: post['name']
-        });
 
         request({
             headers: {
                 'Content-Type': 'application/x-message_router-form-urlencoded'
             },
             uri: url,
-            body: formData,
+            body: body,
             method: 'POST'
         }, function (err, response, body) {
             // send ack
+
+            res.setHeader('Content-Type', 'application/json');
             res.send(body);
         });
     });
@@ -149,6 +144,8 @@ exports.deleteCourse = function(req, res) {
             sendToCourseService();
         } else {
             // send error info
+
+            res.setHeader('Content-Type', 'application/json');
             res.send(body);
         }
     });
@@ -173,6 +170,7 @@ exports.deleteCourse = function(req, res) {
                 revertStudentService();
             }
 
+            res.setHeader('Content-Type', 'application/json');
             res.send(body);
         });
     }
@@ -214,6 +212,8 @@ exports.addCourse = function(req, res) {
             sendToCourseService();
         } else {
             // send error info
+
+            res.setHeader('Content-Type', 'application/json');
             res.send(body);
         }
     });
@@ -238,6 +238,7 @@ exports.addCourse = function(req, res) {
                 revertStudentService();
             }
 
+            res.setHeader('Content-Type', 'application/json');
             res.send(body);
         });
     }
@@ -260,14 +261,9 @@ exports.addCourse = function(req, res) {
 
 // handle configuration
 exports.config = function(req, res) {
-
-};
-
-// handle revert
-exports.revert = function(req, res) {
     // send http request to student service
     var url = 'http://'+ipTable.studentServiceIp+':'+ipTable.studentServicePort+'/student/';
-    url += req.params.uni;
+    url += 'config' + '/' + req.params.field;
 
     request({
         headers: {
@@ -277,6 +273,26 @@ exports.revert = function(req, res) {
         method: 'PATCH'
     }, function (err, response, body) {
         // send ack
+        res.setHeader('Content-Type', 'application/json');
+        res.send(body);
+    });
+};
+
+// handle revert
+exports.revert = function(req, res) {
+    // send http request to student service
+    var url = 'http://'+ipTable.studentServiceIp+':'+ipTable.studentServicePort+'/student/';
+    url += 'revert';
+
+    request({
+        headers: {
+            'Content-Type': 'application/x-message_router-form-urlencoded'
+        },
+        uri: url,
+        method: 'PATCH'
+    }, function (err, response, body) {
+        // send ack
+        res.setHeader('Content-Type', 'application/json');
         res.send(body);
     });
 };

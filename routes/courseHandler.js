@@ -2,7 +2,6 @@
  * This file is for action in course service, including CRUD
  */
 
-var qs = require('querystring');
 var request = require('request');
 var ipTable = require('./iptable');
 
@@ -20,27 +19,20 @@ exports.createCourse = function(req, res) {
     });
 
     req.on('end', function () {
-        var post = qs.parse(body);
-
         // send http request to course service
         var url = 'http://'+ipTable.courseServiceIp+':'+ipTable.courseServicePort+'/course/';
         url += req.params.cid;
-
-        var formData = qs.stringify({
-            name: post['name'],
-            instructor: post['instructor'],
-            studentsEnrolled: post['studentsEnrolled']
-        });
 
         request({
             headers: {
                 'Content-Type': 'application/x-message_router-form-urlencoded'
             },
             uri: url,
-            body: formData,
+            body: body,
             method: 'PUT'
         }, function (err, response, body) {
             // send ack
+            res.setHeader('Content-Type', 'application/json');
             res.send(body);
         });
     });
@@ -60,6 +52,8 @@ exports.deleteCourse = function(req, res) {
         method: 'DELETE'
     }, function (err, response, body) {
         sendToStudentService();
+
+        res.setHeader('Content-Type', 'application/json');
         res.send(body);
     });
 
@@ -93,6 +87,7 @@ exports.readCourse = function(req, res) {
         method: 'GET'
     }, function (err, response, body) {
         // send ack
+        res.setHeader('Content-Type', 'application/json');
         res.send(body);
     });
 };
@@ -111,26 +106,20 @@ exports.updateCourse = function(req, res) {
     });
 
     req.on('end', function () {
-        var post = qs.parse(body);
-
         // send http request to course service
         var url = 'http://'+ipTable.courseServiceIp+':'+ipTable.courseServicePort+'/course/';
         url += req.params.cid;
-
-        var formData = qs.stringify({
-            name: post['name'],
-            instructor: post['instructor']
-        });
 
         request({
             headers: {
                 'Content-Type': 'application/x-message_router-form-urlencoded'
             },
             uri: url,
-            body: formData,
+            body: body,
             method: 'POST'
         }, function (err, response, body) {
             // send ack
+            res.setHeader('Content-Type', 'application/json');
             res.send(body);
         });
     });
@@ -157,6 +146,7 @@ exports.deleteStudent = function(req, res) {
             sendToStudentService();
         } else {
             // send error info
+            res.setHeader('Content-Type', 'application/json');
             res.send(body);
         }
     });
@@ -181,6 +171,7 @@ exports.deleteStudent = function(req, res) {
                 revertCourseService();
             }
 
+            res.setHeader('Content-Type', 'application/json');
             res.send(body);
         });
     }
@@ -222,6 +213,7 @@ exports.addStudent = function(req, res) {
             sendToStudentService();
         } else {
             // send error info
+            res.setHeader('Content-Type', 'application/json');
             res.send(body);
         }
     });
@@ -246,6 +238,7 @@ exports.addStudent = function(req, res) {
                 revertCourseService();
             }
 
+            res.setHeader('Content-Type', 'application/json');
             res.send(body);
         });
     }
@@ -268,14 +261,9 @@ exports.addStudent = function(req, res) {
 
 // handle configuration
 exports.config = function(req, res) {
-
-};
-
-// handle revert
-exports.revert = function(req, res) {
-    // send http request to course service
+    // send http request to student service
     var url = 'http://'+ipTable.courseServiceIp+':'+ipTable.courseServicePort+'/course/';
-    url += req.params.cid;
+    url += 'config' + '/' + req.params.field;
 
     request({
         headers: {
@@ -285,6 +273,26 @@ exports.revert = function(req, res) {
         method: 'PATCH'
     }, function (err, response, body) {
         // send ack
+        res.setHeader('Content-Type', 'application/json');
+        res.send(body);
+    });
+};
+
+// handle revert
+exports.revert = function(req, res) {
+    // send http request to course service
+    var url = 'http://'+ipTable.courseServiceIp+':'+ipTable.courseServicePort+'/course/';
+    url += 'revert';
+
+    request({
+        headers: {
+            'Content-Type': 'application/x-message_router-form-urlencoded'
+        },
+        uri: url,
+        method: 'PATCH'
+    }, function (err, response, body) {
+        // send ack
+        res.setHeader('Content-Type', 'application/json');
         res.send(body);
     });
 };
