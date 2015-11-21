@@ -76,6 +76,8 @@ exports.readStudent = function(req, res) {
     // send http request to student service
     var url = 'http://'+ipTable.studentServiceIp+':'+ipTable.studentServicePort+'/student/'+req.params.uni;
 
+    console.log(ipTable.studentServicePort);
+
     request({
         headers: {
             'Content-Type': 'application/x-message_router-form-urlencoded'

@@ -1,13 +1,12 @@
 var express = require('express');
 var path = require('path');
-var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
-var users = require('./routes/users');
 var course = require('./routes/courseHandler');
 var student = require('./routes/studentHandler');
+var router = require('./routes/routerHandler');
 
 var app = express();
 
@@ -43,6 +42,9 @@ app.delete('/student/:uni', student.deleteStudent);
 app.delete('/student/:uni/:cid', student.deleteCourse);
 app.patch('/student/config/:field', student.config);
 app.patch('/student/revert', student.revert);
+
+// router
+app.patch('/router/:service/:key/:value', router.config);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
