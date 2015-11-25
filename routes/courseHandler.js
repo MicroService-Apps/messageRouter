@@ -259,11 +259,30 @@ exports.addStudent = function(req, res) {
     }
 };
 
-// handle configuration
-exports.config = function(req, res) {
+// handle configuration, add field
+exports.addField = function(req, res) {
     // send http request to student service
     var url = 'http://'+ipTable.courseServiceIp+':'+ipTable.courseServicePort+'/course/';
-    url += 'config' + '/' + req.params.field;
+    url += 'add' + '/' + req.params.field;
+
+    request({
+        headers: {
+            'Content-Type': 'application/x-message_router-form-urlencoded'
+        },
+        uri: url,
+        method: 'PATCH'
+    }, function (err, response, body) {
+        // send ack
+        res.setHeader('Content-Type', 'application/json');
+        res.send(body);
+    });
+};
+
+// handle configuration, delete field
+exports.deleteField = function(req, res) {
+    // send http request to student service
+    var url = 'http://'+ipTable.courseServiceIp+':'+ipTable.courseServicePort+'/course/';
+    url += 'delete' + '/' + req.params.field;
 
     request({
         headers: {

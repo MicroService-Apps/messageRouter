@@ -30,7 +30,8 @@ app.put('/course/:cid', course.createCourse);
 app.post('/course/:cid', course.updateCourse);
 app.delete('/course/:cid', course.deleteCourse);
 app.delete('/course/:cid/:uni', course.deleteStudent);
-app.patch('/course/config/:field', course.config);
+app.patch('/course/add/:field', course.addField);
+app.patch('/course/delete/:field', course.deleteField);
 app.patch('/course/revert', course.revert);
 
 // student service
@@ -40,7 +41,8 @@ app.put('/student/:uni', student.createStudent);
 app.post('/student/:uni', student.updateStudent);
 app.delete('/student/:uni', student.deleteStudent);
 app.delete('/student/:uni/:cid', student.deleteCourse);
-app.patch('/student/config/:field', student.config);
+app.patch('/student/add/:field', student.addField);
+app.patch('/student/delete/:field', student.deleteField);
 app.patch('/student/revert', student.revert);
 
 // router
