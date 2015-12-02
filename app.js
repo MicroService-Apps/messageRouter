@@ -32,7 +32,6 @@ app.delete('/course/:cid', course.deleteCourse);
 app.delete('/course/:cid/:uni', course.deleteStudent);
 app.patch('/course/add/:field', course.addField);
 app.patch('/course/delete/:field', course.deleteField);
-app.patch('/course/revert', course.revert);
 
 // student service
 app.get('/student/:uni', student.readStudent);
@@ -43,10 +42,9 @@ app.delete('/student/:uni', student.deleteStudent);
 app.delete('/student/:uni/:cid', student.deleteCourse);
 app.patch('/student/add/:field', student.addField);
 app.patch('/student/delete/:field', student.deleteField);
-app.patch('/student/revert', student.revert);
 
 // router
-app.patch('/router/:service/:key/:value', router.config);
+app.patch('/router/:service/:name/:ip/:port', router.config);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

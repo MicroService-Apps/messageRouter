@@ -4,10 +4,11 @@ var iptable = require('./iptable');
 // config routing table
 exports.config = function(req, res) {
     var service = req.params.service;
-    var key = req.params.key;
-    var value = req.params.value;
+    var name = req.params.name;
+    var ip = req.params.ip;
+    var port = req.params.port;
 
-    var response = iptable.configTable(service, key, value);
+    var response = iptable.configTable(service, name, ip, port);
 
     res.setHeader('Content-Type', 'application/json');
     res.send(response);

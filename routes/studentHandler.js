@@ -4,6 +4,7 @@
 
 var request = require('request');
 var ipTable = require('./iptable');
+var serviceType = 'student';
 
 // handle create a new student
 exports.createStudent = function(req, res) {
@@ -18,9 +19,22 @@ exports.createStudent = function(req, res) {
             request.connection.destroy();
     });
 
+    var firstChar = (req.params.uni).toLowerCase()[0];
+    var ip = ipTable.getIp(serviceType, firstChar);
+    var port = ipTable.getPort(serviceType, firstChar);
+
+    if(ip == null || port == null) {
+        var response = {};
+        response['status'] = 'failed';
+        response['message'] = 'uni invalid';
+
+        res.send(response);
+        return;
+    }
+
     req.on('end', function () {
         // send http request to student service
-        var url = 'http://'+ipTable.studentServiceIp+':'+ipTable.studentServicePort+'/student/'+req.params.uni;
+        var url = 'http://'+ip+':'+port+'/student/'+req.params.uni;
 
         request({
             headers: {
@@ -39,8 +53,12 @@ exports.createStudent = function(req, res) {
 
 // handle delete an existing student
 exports.deleteStudent = function(req, res) {
+    var firstChar = (req.params.uni).toLowerCase()[0];
+    var ip = ipTable.getIp(serviceType, firstChar);
+    var port = ipTable.getPort(serviceType, firstChar);
+
     // send http request to student service
-    var url = 'http://'+ipTable.studentServiceIp+':'+ipTable.studentServicePort+'/student/'+req.params.uni;
+    var url = 'http://'+ip+':'+port+'/student/'+req.params.uni;
 
     request({
         headers: {
@@ -49,15 +67,27 @@ exports.deleteStudent = function(req, res) {
         uri: url,
         method: 'DELETE'
     }, function (err, response, body) {
-        sendToCourseService();
+        var courseIp = ipTable.getIp('course', 'all');
+        var coursePort = ipTable.getPort('course', 'all');
+
+        sendToCourseService(courseIp, coursePort);
 
         res.setHeader('Content-Type', 'application/json');
         res.send(body);
     });
 
-    function sendToCourseService() {
+    if(ip == null || port == null) {
+        var response = {};
+        response['status'] = 'failed';
+        response['message'] = 'uni invalid';
+
+        res.send(response);
+        return;
+    }
+
+    function sendToCourseService(ip, port) {
         // send http request to course service
-        var url = 'http://'+ipTable.courseServiceIp+':'+ipTable.courseServicePort+'/course/all/'+ req.params.uni;
+        var url = 'http://'+ip+':'+port+'/course/all/'+ req.params.uni;
 
         request({
             headers: {
@@ -73,10 +103,21 @@ exports.deleteStudent = function(req, res) {
 
 // handle read student information
 exports.readStudent = function(req, res) {
-    // send http request to student service
-    var url = 'http://'+ipTable.studentServiceIp+':'+ipTable.studentServicePort+'/student/'+req.params.uni;
+    var firstChar = (req.params.uni).toLowerCase()[0];
+    var ip = ipTable.getIp(serviceType, firstChar);
+    var port = ipTable.getPort(serviceType, firstChar);
 
-    console.log(ipTable.studentServicePort);
+    if(ip == null || port == null) {
+        var response = {};
+        response['status'] = 'failed';
+        response['message'] = 'uni invalid';
+
+        res.send(response);
+        return;
+    }
+
+    // send http request to student service
+    var url = 'http://'+ip+':'+port+'/student/'+req.params.uni;
 
     request({
         headers: {
@@ -105,9 +146,22 @@ exports.updateStudent = function(req, res) {
             request.connection.destroy();
     });
 
+    var firstChar = (req.params.uni).toLowerCase()[0];
+    var ip = ipTable.getIp(serviceType, firstChar);
+    var port = ipTable.getPort(serviceType, firstChar);
+
+    if(ip == null || port == null) {
+        var response = {};
+        response['status'] = 'failed';
+        response['message'] = 'uni invalid';
+
+        res.send(response);
+        return;
+    }
+
     req.on('end', function () {
         // send http request to student service
-        var url = 'http://'+ipTable.studentServiceIp+':'+ipTable.studentServicePort+'/student/'+req.params.uni;
+        var url = 'http://'+ip+':'+port+'/student/'+req.params.uni;
 
         request({
             headers: {
@@ -127,8 +181,24 @@ exports.updateStudent = function(req, res) {
 
 // handle delete course in course list
 exports.deleteCourse = function(req, res) {
+    var firstChar = (req.params.uni).toLowerCase()[0];
+    var studentIp = ipTable.getIp(serviceType, firstChar);
+    var studentPort = ipTable.getPort(serviceType, firstChar);
+
+    var courseIp = ipTable.getIp('course', 'all');
+    var coursePort = ipTable.getPort('course', 'all');
+
+    if(studentIp == null || studentPort == null) {
+        var response = {};
+        response['status'] = 'failed';
+        response['message'] = 'uni invalid';
+
+        res.send(response);
+        return;
+    }
+
     // send http request to student service
-    var url = 'http://'+ipTable.studentServiceIp+':'+ipTable.studentServicePort+'/student/';
+    var url = 'http://'+studentIp+':'+studentPort+'/student/';
     url += req.params.uni+'/'+req.params.cid;
 
     request({
@@ -143,7 +213,7 @@ exports.deleteCourse = function(req, res) {
 
         if(response.status == 'succeed') {
             // If succeed , synchronize course service
-            sendToCourseService();
+            sendToCourseService(courseIp, coursePort, studentIp, studentPort);
         } else {
             // send error info
 
@@ -152,9 +222,9 @@ exports.deleteCourse = function(req, res) {
         }
     });
 
-    function sendToCourseService() {
+    function sendToCourseService(courseIp, coursePort, studentIp, studentPort) {
         // send request to course service
-        var url = 'http://' + ipTable.courseServiceIp + ':' + ipTable.courseServicePort + '/course/';
+        var url = 'http://' + courseIp + ':' + coursePort + '/course/';
         url += req.params.cid + '/' + req.params.uni;
 
         request({
@@ -169,7 +239,7 @@ exports.deleteCourse = function(req, res) {
 
             if(response.status == 'failed') {
                 // If fails, revert the operation in student
-                revertStudentService();
+                revertStudentService(studentIp, studentPort);
             }
 
             res.setHeader('Content-Type', 'application/json');
@@ -177,9 +247,9 @@ exports.deleteCourse = function(req, res) {
         });
     }
 
-    function revertStudentService() {
+    function revertStudentService(studentIp, studentPort) {
         // send http request to student service
-        var url = 'http://'+ipTable.studentServiceIp+':'+ipTable.studentServicePort+'/student/revert';
+        var url = 'http://'+studentIp+':'+studentPort+'/student/revert';
 
         request({
             headers: {
@@ -195,8 +265,24 @@ exports.deleteCourse = function(req, res) {
 
 // handle add course in course list
 exports.addCourse = function(req, res) {
+    var firstChar = (req.params.uni).toLowerCase()[0];
+    var studentIp = ipTable.getIp(serviceType, firstChar);
+    var studentPort = ipTable.getPort(serviceType, firstChar);
+
+    var courseIp = ipTable.getIp('course', 'all');
+    var coursePort = ipTable.getPort('course', 'all');
+
+    if(studentIp == null || studentPort == null) {
+        var response = {};
+        response['status'] = 'failed';
+        response['message'] = 'uni invalid';
+
+        res.send(response);
+        return;
+    }
+
     // send http request to student service
-    var url = 'http://'+ipTable.studentServiceIp+':'+ipTable.studentServicePort+'/student/';
+    var url = 'http://'+studentIp+':'+studentPort+'/student/';
     url += req.params.uni+'/'+req.params.cid;
 
     request({
@@ -211,7 +297,7 @@ exports.addCourse = function(req, res) {
 
         if(response.status == 'succeed') {
             // If succeed , synchronize course service
-            sendToCourseService();
+            sendToCourseService(courseIp, coursePort, studentIp, studentPort);
         } else {
             // send error info
 
@@ -220,9 +306,9 @@ exports.addCourse = function(req, res) {
         }
     });
 
-    function sendToCourseService() {
+    function sendToCourseService(courseIp, coursePort, studentIp, studentPort) {
         // send request to course service
-        var url = 'http://' + ipTable.courseServiceIp + ':' + ipTable.courseServicePort + '/course/';
+        var url = 'http://' + courseIp + ':' + coursePort + '/course/';
         url += req.params.cid + '/' + req.params.uni;
 
         request({
@@ -237,7 +323,7 @@ exports.addCourse = function(req, res) {
 
             if(response.status == 'failed') {
                 // If fails, revert the operation in student
-                revertStudentService();
+                revertStudentService(studentIp, studentPort);
             }
 
             res.setHeader('Content-Type', 'application/json');
@@ -245,9 +331,9 @@ exports.addCourse = function(req, res) {
         });
     }
 
-    function revertStudentService() {
+    function revertStudentService(studentIp, studentPort) {
         // send http request to student service
-        var url = 'http://'+ipTable.studentServiceIp+':'+ipTable.studentServicePort+'/student/revert';
+        var url = 'http://'+studentIp+':'+studentPort+'/student/revert';
 
         request({
             headers: {
@@ -263,57 +349,66 @@ exports.addCourse = function(req, res) {
 
 // handle configuration, add a field
 exports.addField = function(req, res) {
-    // send http request to student service
-    var url = 'http://'+ipTable.studentServiceIp+':'+ipTable.studentServicePort+'/student/';
-    url += 'add' + '/' + req.params.field;
+    var allAddress = ipTable.getAll(serviceType);
+    var response = {};
 
-    request({
-        headers: {
-            'Content-Type': 'application/x-message_router-form-urlencoded'
-        },
-        uri: url,
-        method: 'PATCH'
-    }, function (err, response, body) {
-        // send ack
-        res.setHeader('Content-Type', 'application/json');
-        res.send(body);
-    });
+    for(var key in allAddress) {
+        var ip = allAddress[key]['host'];
+        var port = allAddress[key]['port'];
+
+        sendToStudent(ip, port);
+    }
+
+    response['status'] = 'succeed';
+    response['message'] = 'field ' + req.params.field + ' is added successfully';
+    res.send(response);
+
+    function sendToStudent(ip, port) {
+        // send http request to student service
+        var url = 'http://' + ip + ':' + port + '/student/';
+        url += 'add' + '/' + req.params.field;
+
+        request({
+            headers: {
+                'Content-Type': 'application/x-message_router-form-urlencoded'
+            },
+            uri: url,
+            method: 'PATCH'
+        }, function (err, response, body) {
+            // finish
+        });
+    }
 };
 
 // handle configuration, delete a field
 exports.deleteField = function(req, res) {
-    // send http request to student service
-    var url = 'http://'+ipTable.studentServiceIp+':'+ipTable.studentServicePort+'/student/';
-    url += 'delete' + '/' + req.params.field;
+    var allAddress = ipTable.getAll(serviceType);
+    var response = {};
 
-    request({
-        headers: {
-            'Content-Type': 'application/x-message_router-form-urlencoded'
-        },
-        uri: url,
-        method: 'PATCH'
-    }, function (err, response, body) {
-        // send ack
-        res.setHeader('Content-Type', 'application/json');
-        res.send(body);
-    });
-};
+    for(var key in allAddress) {
+        var ip = allAddress[key]['host'];
+        var port = allAddress[key]['port'];
 
-// handle revert
-exports.revert = function(req, res) {
-    // send http request to student service
-    var url = 'http://'+ipTable.studentServiceIp+':'+ipTable.studentServicePort+'/student/';
-    url += 'revert';
+        sendToStudent(ip, port);
+    }
 
-    request({
-        headers: {
-            'Content-Type': 'application/x-message_router-form-urlencoded'
-        },
-        uri: url,
-        method: 'PATCH'
-    }, function (err, response, body) {
-        // send ack
-        res.setHeader('Content-Type', 'application/json');
-        res.send(body);
-    });
+    response['status'] = 'succeed';
+    response['message'] = 'field ' + req.params.field + ' is deleted successfully';
+    res.send(response);
+
+    function sendToStudent(ip, port) {
+        // send http request to student service
+        var url = 'http://' + ip + ':' + port + '/student/';
+        url += 'delete' + '/' + req.params.field;
+
+        request({
+            headers: {
+                'Content-Type': 'application/x-message_router-form-urlencoded'
+            },
+            uri: url,
+            method: 'PATCH'
+        }, function (err, response, body) {
+            // finish
+        });
+    }
 };

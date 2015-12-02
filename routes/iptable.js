@@ -7,15 +7,16 @@ var defaultConfigPath = path.join(path.dirname(__dirname),'config/default.json')
 var configFile = fs.readFileSync(defaultConfigPath);
 var defaultSetting = JSON.parse(configFile);
 
-exports.configTable = function(service, key, value) {
+// config service table
+exports.configTable = function(service, name, ip, port) {
     var response = new Object();
 
-    if(defaultSetting[service] != null && defaultSetting[service][key] != null) {
-        defaultSetting[service][key] = value;
-        updateExport();
+    if(defaultSetting[service] != null && defaultSetting[service][name] != null) {
+        defaultSetting[service][name]['host'] = ip;
+        defaultSetting[service][name]['port'] = port;
 
         response.status = 'succeed';
-        response.message = service+'\' '+key+' is set to '+value;
+        response.message = service+'\' '+' routing table is set successfully';
     } else {
         response.status = 'failed';
         response.message = 'no such service or setting';
@@ -26,14 +27,42 @@ exports.configTable = function(service, key, value) {
     return response;
 };
 
-function updateExport() {
-    exports.studentServiceIp = defaultSetting.student.host;
-    exports.studentServicePort = defaultSetting.student.port;
-    exports.courseServiceIp = defaultSetting.course.host;
-    exports.courseServicePort = defaultSetting.course.port;
-}
+// get ip
+exports.getIp = function(service, key) {
+    if(defaultSetting[service] != null && defaultSetting[service][key] != null) {
+        return defaultSetting[service][key]['host'];
+    } else {
+        return null;
+    }
+};
 
-exports.studentServiceIp = defaultSetting.student.host;
-exports.studentServicePort = defaultSetting.student.port;
-exports.courseServiceIp = defaultSetting.course.host;
-exports.courseServicePort = defaultSetting.course.port;
+// get port
+exports.getPort = function(service, key) {
+    if(defaultSetting[service] != null && defaultSetting[service][key] != null) {
+        return defaultSetting[service][key]['port'];
+    } else {
+        return null;
+    }
+};
+
+// get all ip and port
+exports.getAll = function(service) {
+    var hashMap = {};
+    var alphabet = 'abcdefghijklmnopqrstuvwxyz';
+
+    for(var i = 0; i < alphabet.length; i++) {
+        var ch = alphabet[i];
+        var ip = defaultSetting[service][ch]['host'];
+        var port = defaultSetting[service][ch]['port'];
+        var str = ip + port;
+
+        if(hashMap[str] == null) {
+            hashMap[str] = {
+                'host': ip,
+                'port': port
+            };
+        }
+    }
+
+    return hashMap;
+};
