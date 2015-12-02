@@ -1,4 +1,4 @@
-// This file define the ips and port numbers of each service
+// This file defines operation on routing table 
 
 var path = require('path');
 var fs = require('fs');
